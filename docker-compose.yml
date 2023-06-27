@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  sshd:
+    container_name: sshd
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - SSH_USER=user
+    ports:
+      - "2022:22"
+    environment:
+      SSH_USER: user
+    # volumes:
+    #   - ./authorized_keys:/home/user/.ssh/authorized_keys # Attach your authorized_keys file
