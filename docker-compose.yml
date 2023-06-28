@@ -5,11 +5,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        - SSH_USER=user
     ports:
-      - "2022:22"
+      - "2200:22"
     environment:
-      SSH_USER: user
-    # volumes:
-    #   - ./authorized_keys:/home/user/.ssh/authorized_keys # Attach your authorized_keys file
+      SSH_USER: user # Required
+    volumes:
+      - ./keys:/etc/ssh/keys # Required, add your authorized_keys file there, the newly generated host keys will be saved here as well

@@ -1,29 +1,29 @@
 #!/bin/sh
 
-SSH_HOST_KEYS="/etc/ssh/ssh_host_*"
-SSH_HOST_PUB_KEYS="/etc/ssh/ssh_host_*.pub"
-SSH_DIR="/home/$SSH_USER/.ssh"
-SSH_AUTH="$SSH_DIR/authorized_keys"
+KEYS=/etc/ssh/keys
 
-if [ -n "$(echo $SSH_HOST_KEYS)" ]; then
-  # Fix permissions on host keys
-  chmod 600 $SSH_HOST_KEYS
-  chown root:root $SSH_HOST_KEYS
-  if [ -n "$(echo $SSH_HOST_PUB_KEYS)" ]; then
-    # Fix permissions on host public keys
-    chmod 644 $SSH_HOST_PUB_KEYS
-    chown root:root $SSH_HOST_PUB_KEYS
-  fi
+echo "Setting a '$SSH_USER' account with a random password"
+useradd -s /bin/bash -m $SSH_USER
+echo "$SSH_USER:$(head /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 40)" | chpasswd
+
+mkdir -p $KEYS
+chmod 755 $KEYS
+
+if [ ! -f "$KEYS/ssh_host_ed25519_key" ] || [ ! -f "$KEYS/ssh_host_rsa_key" ]; then
+  echo "Generating new host keys"
+  ssh-keygen -t ed25519 -f "$KEYS/ssh_host_ed25519_key" -q -N ''
+  ssh-keygen -t rsa -b 4096 -f "$KEYS/ssh_host_rsa_key" -q -N ''
 else
-  # Generate new host keys
-  ssh-keygen -A
+  echo "Fixing permissions for attached key files"
+  chmod 600 "$KEYS/ssh_host_ed25519_key" || true
+  chmod 600 "$KEYS/ssh_host_rsa_key" || true
 fi
 
-if [ -f "$SSH_AUTH" ]; then
-  # Fix permissions on mounted authorized_keys file
-  chmod 600 "$SSH_AUTH"
-  chown $SSH_USER:$SSH_USER "$SSH_AUTH"
+if [ -f "$KEYS/authorized_keys" ]; then
+  echo "Fixing permissions for authorized_keys file"
+  chmod 644 "$KEYS/authorized_keys"
+  sed -i "s/^\(#\)\?\(AllowUsers\).*/\2 $SSH_USER/" /etc/ssh/sshd_config
   /usr/sbin/sshd -D -e "$@"
 else
-  echo "File not found, cannot proceed: $SSH_AUTH"
+  echo "You must provide the authorized_keys file: $KEYS/authorized_keys"
 fi
