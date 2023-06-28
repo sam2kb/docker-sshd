@@ -1,0 +1,13 @@
+Protocol 2
+HostKey /etc/ssh/keys/ssh_host_ed25519_key
+HostKey /etc/ssh/keys/ssh_host_rsa_key
+AuthorizedKeysFile /etc/ssh/keys/authorized_keys
+
+UseDNS no
+PermitRootLogin no
+PasswordAuthentication no
+X11Forwarding no
+#AllowUsers
+
+# Enable this for more logs
+#LogLevel VERBOSE
